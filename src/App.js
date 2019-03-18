@@ -1,28 +1,41 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import Todo from './components/Todo.js';
+import Header from './components/Header.js';
+import Auth from './components/Auth.js';
+import AuthContext from './common/app-context.js';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
+
+
+const App = props => {
+
+  //State
+  const [routeName, setRouteName] = useState(0);
+  const [authStatus, setAuthStatus] = useState(false);
+
+  //Event Handlers
+  const todoHandler = event => {
+    setRouteName(1);
   }
-}
+
+  const authHandler = event => {
+    setRouteName(0);
+  }
+
+  const customRoute = routeName ? <Todo/> : <Auth/>;
+
+  const logIn = () => {
+    setAuthStatus(true);
+  };
+
+  return (
+    <div className="App">
+      <AuthContext.Provider value={{ status: authStatus, logIn: logIn }} >
+        <Header onLoadTodos={todoHandler} onLoadAuth={authHandler}/>
+        <hr/>
+        {customRoute}
+      </AuthContext.Provider>
+    </div>
+  );
+};
 
 export default App;

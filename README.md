@@ -1,68 +1,269 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# React Hooks
 
-## Available Scripts
+Current difference between `Functional` components and `Structural` components
 
-In the project directory, you can run:
+| Functional | Structural |
+|:-----------|-----------:|
+| Props in, JSX Out | Uses props and state |
+| Great for presentation | Business logic goes here |
+| Focused on one / few purpose(s) | Orchestrates components |
+| | Lifecycle hooks are hard to use |
 
-### `npm start`
+> Conversion of Structural to Functional is annoying
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+---
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+# Example of a Hook
 
-### `npm test`
+- In a React functional component, you inject hooks by using the prefix `use`
+- `useState` is a hook that is also a function, so you can invoke it within your functional component
 
-Launches the test runner in the interactive watch mode.<br>
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```js
+// useState is a React Hook
+import React, {useState} from 'react';
 
-### `npm run build`
+const todo = (props) => {    
+    // useState is a hook that is also a function
+    const inputState = useState('');
+    return (
+        ...
+    );
+}
 
-Builds the app for production to the `build` folder.<br>
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```
 
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
+- `useState('')` take in an argument, which is the initial state of the functional component
+    - The argument can be anything - `Array`, `Object`, `String`, `Boolean` ...etc.,
+- `useState('')` also returns an `array` which has 2 elements:
+    - The first element of the array is the current state.
+    - The second element of the array is the function to modify the state
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```jsx
+import React, { useState } from 'react';
 
-### `npm run eject`
+const Todo = (props)=>{
+    // useState is also a function so we invoke it as a function
+    // It takes in an initial state, which we pass as a string argument
+    // It returns a value, which is an array - 2 elements
+ 
+    const inputState = useState('');
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+    const inputChangeHandler = (event) => {
+        // First element - full state / current state
+        // Second element - function to manipulate the state
+        inputState[1](event.target.value);
+    };
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    return (
+    <React.Fragment>
+        <input type="text" placeholder="Add Todo here..." onChange={inputChangeHandler} value={inputState[0]}/>
+        <button>Add</button>
+        <ul/>
+    </React.Fragment>
+    );
+}
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (Webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+---
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+# Difference between setState(Structural components) and useState(Functional Components)
 
-## Learn More
+> - Important: Unlike `setState()` which merges the new value with the existing state, 
+> - The `useState()` creates new copies of the updated state and replaces them with the current state.
+> - This means that whenever you `useState()` hook with only one state object for all the values, its your job to manually merge the remaining properties as well.
+> - That's why it makes sense to split up the `useState()` hook.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# Rules of using Hooks in React
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- It has to be a `React Functional` Component, not a ES6 / JS function
+    - such a function which takes in props and returns a JSX component
+    - which React can use to render the component
+    - Hooks will not work correctly on other function
+- You must only use `useState()` and all the other hooks directly at the top level of your component function.
+- You cannot call `useState()` in a function / event handler of a function. The following is not allowed
 
-### Code Splitting
+```js
+const inputChangeHandler = (event) => {        
+        // this is not allowed
+        const [todoList, setTodoList] = useState([]); // hooks cant be inside another function        
+    };
+```
+- You cannot call `useState()` inside a if condition / for loop
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
 
-### Analyzing the Bundle Size
+# useEffect Hook
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+The `useEffect` react hook is especially useful if your functional component needs to fetch results as part of a XHR request 
 
-### Making a Progressive Web App
+- Unlike the `useState()` hook which takes in a string / object / array.
+- The `useEffect()` hook takes in a function - This can be any code execution that should not be present in the render function
+- The reason we donot put XHR request directly inside the `render()` function is because:
+    - They are not Performant, React does quite alot of work behind the `render()` that's why its not the right place to put custom logic
+    - They can produce side-effects
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+```js
+// Simple mouse register event
+const mouseMoveHandler = event => {
+        console.log(event.clientX, event.clientY);
+};
 
-### Advanced Configuration
+    useEffect(()=>{
+        // Also call the XHR request
+        Axios.get(`https://reqres.in/api/users?page=2`)
+        .then(res=>console.log(`Response from the service is`, res.data.data));
+        // event registration
+        document.addEventListener('mousemove', mouseMoveHandler);
+        // This also means we are using our effect as componentDidUnmount() lifecycle method
+        return () => {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+        }
+    }, []); //This means we want our effect to act as componentDidMount() / componentDidUpdate lifecycle method
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
+---
 
-### Deployment
+# Passing Arguments using Bind function
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
+> IMPORTANT: How to use bind along with function invoking
 
-### `npm run build` fails to minify
+You can put reference to the same function when implementing a `prop` method. You can pass argument dynamically using the bind function
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+```js
+// Consider this to be our functional component which calls 2 different arguments
+const Header = props => {
+    return(
+        <header>
+            // Calling on 2 different property methods
+            <button onClick={props.onLoadTodos}>TodoList</button> | {' '}
+            <button onClick={props.onLoadAuth}> Auth </button>
+        </header>
+    );
+}
+
+// You can still reference a single function when calling this and pass the binding arguments
+// This will be our common function which takes in a parameter
+const switchPage = pageName => {
+    setPage(pageName);
+}
+
+// ...and this is how we use the same function, but bind different arguments to it
+<Header onLoadTodos={switchPage.bind(this, 'todos')} onLoadAuth={switchPage.bind(this, 'auth')}/>
+
+```
+---
+
+# Context API Hook `useContext()`
+
+The `useContext()` takes in a `context API`  class and returns an instance of that Context API 
+- so we can easily have access to the fields and properties of the Context API
+
+- The following is a code to write a simple bare bones `functional` appContext class
+
+```js
+import React from 'react';
+
+// Simple AuthContext class
+const authContext = React.createContext({
+    status:false,
+    logIn:()=>{}
+});
+
+export default authContext;
+```
+
+- Now we can use this as a wrapper in our `App.js`  class as follows:
+
+```js
+import React, { useState } from 'react';
+import Todo from './components/Todo.js';
+import Header from './components/Header.js';
+import Auth from './components/Auth.js';
+import AuthContext from './common/app-context.js';
+
+
+
+const App = props => {
+
+  //State
+  const [routeName, setRouteName] = useState(0);
+  // We bind the fields of authContext as a useState hook of App.js
+  const [authStatus, setAuthStatus] = useState(false);
+
+  //Event Handlers
+  const todoHandler = event => {
+    setRouteName(1);
+  }
+
+  const authHandler = event => {
+    setRouteName(0);
+  }
+
+  const customRoute = routeName ? <Todo/> : <Auth/>;
+
+    // We override the function of appContext here!
+  const logIn = () => {
+    setAuthStatus(true);
+  };
+
+  return (
+    <div className="App">
+      <AuthContext.Provider value={{ status: authStatus, logIn: logIn }} >
+        <Header onLoadTodos={todoHandler} onLoadAuth={authHandler}/>
+        <hr/>
+        {customRoute}
+      </AuthContext.Provider>
+    </div>
+  );
+};
+
+export default App;
+```
+
+---
+
+- Now we can easily integrate this context api into our components, like such:
+
+```js
+// Header.js
+import React, { useContext } from 'react';
+import AuthContext from '../common/app-context';
+
+const Header = props => {
+    // Integrate context API using the useContext hook
+    const auth = useContext(AuthContext);
+    return(
+        <header>
+            {auth.status && <button onClick={props.onLoadTodos}>TodoList</button>}
+            <button onClick={props.onLoadAuth}> Auth </button>
+        </header>
+    );
+}
+
+export default Header;
+
+//Auth.js
+import React, { useContext } from 'react';
+import AuthContext from './../common/app-context.js';
+
+const Auth = props => {
+    // Integrate context API using the useContext hook
+    const auth = useContext(AuthContext);
+    return(
+        <div>
+            <h1>Auth Component</h1>
+            <button onClick={ auth.logIn }> Log in! </button>
+        </div>
+    );
+};
+
+export default Auth;
+```
+
+---
+
+# `useReducer()` Hook
+
+A `useReducer()` hook is just a function which can handle more than one logic. In the end, its a function which can a handle a couple of 
+different cases, a couple of different conditions and update the `state` in different ways.
+
+
